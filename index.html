@@ -1,0 +1,540 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Нячанг на скутере</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: one phone-height column. Home = cover + "now" card + tide-like day rail (sun → dusk);
+   each stop opens as a full-screen sheet with a sticky action bar. */
+:root {
+  --bg: #F6F1E8;        /* warm sand */
+  --surface: #FFFFFF;
+  --ink: #0B2B36;       /* deep sea */
+  --muted: #4E6670;
+  --line: #E4DCCD;
+  --sun: #E8590C;       /* day / south */
+  --sea: #0B7A8C;       /* north coast */
+  --dusk: #5145CD;      /* evening */
+  --sun-soft: #FFE7D6;
+  --sea-soft: #D9F1F3;
+  --dusk-soft: #E7E5FB;
+  --warn-bg: #FFF2E2; --warn-ink: #9A3A06;
+  --cover-ink: #FFFFFF;
+  --shadow: 0 6px 24px rgba(11,43,54,.12);
+  --f-display: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --f-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0C1A20; --surface: #13262E; --ink: #EAF4F5; --muted: #9DB4BB; --line: #24404A;
+  --sun: #FF8A3D; --sea: #3CC4D6; --dusk: #9A92FF;
+  --sun-soft: #3A2316; --sea-soft: #12343B; --dusk-soft: #24224A;
+  --warn-bg: #3A2614; --warn-ink: #FFC08A; --shadow: 0 6px 24px rgba(0,0,0,.4); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0C1A20; --surface: #13262E; --ink: #EAF4F5; --muted: #9DB4BB; --line: #24404A;
+  --sun: #FF8A3D; --sea: #3CC4D6; --dusk: #9A92FF;
+  --sun-soft: #3A2316; --sea-soft: #12343B; --dusk-soft: #24224A;
+  --warn-bg: #3A2614; --warn-ink: #FFC08A; --shadow: 0 6px 24px rgba(0,0,0,.4); color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5;
+  -webkit-tap-highlight-color: transparent; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+.ic { width: 1.15em; height: 1.15em; flex: none; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+.wrap { max-width: 560px; margin: 0 auto; padding-inline: 16px; }
+
+/* ---------- cover ---------- */
+.cover { position: relative; color: var(--cover-ink); background: #0B2B36; overflow: hidden; }
+.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,25,32,.15) 0%, rgba(5,25,32,.55) 55%, rgba(5,25,32,.92) 100%); }
+.cover .in { position: relative; z-index: 1; padding-block: 92px 22px; display: flex; flex-direction: column; gap: 12px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; font-weight: 800; font-size: 13px;
+  letter-spacing: .04em; text-transform: uppercase; background: var(--sun); color: #fff; padding: 6px 12px; border-radius: 999px; }
+.cover h1 { font-size: clamp(30px, 8.6vw, 42px); line-height: 1.05; font-weight: 800; }
+.cover p { margin: 0; font-size: 16px; opacity: .92; max-width: 34ch; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; }
+.stats div { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); border-radius: 14px; padding: 8px 4px; text-align: center; }
+.stats b { display: block; font-family: var(--f-display); font-size: 16px; font-variant-numeric: tabular-nums; }
+.stats span { font-size: 12px; opacity: .85; }
+
+/* ---------- now card ---------- */
+.now { margin-top: -14px; position: relative; z-index: 2; background: var(--surface); border-radius: 22px; box-shadow: var(--shadow);
+  padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.now .lbl { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.now .lbl i { width: 9px; height: 9px; border-radius: 50%; background: var(--sun); box-shadow: 0 0 0 4px var(--sun-soft); }
+.now h2 { font-size: 20px; line-height: 1.2; }
+.now p { margin: 0; color: var(--muted); }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar b { display: block; height: 100%; background: var(--sun); border-radius: 3px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 12px 16px; border-radius: 16px;
+  font-weight: 800; font-size: 16px; text-decoration: none; border: 0; cursor: pointer; }
+.btn.go { background: var(--sun); color: #fff; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+.btn.soft { background: var(--sea-soft); color: var(--ink); }
+.btn.line { background: var(--surface); border: 1.5px solid var(--line); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.row > .btn { flex: 1 1 140px; }
+.row > .btn.go { flex: 2 1 180px; }
+.row > .pinbtn { flex: 1 0 auto; }
+
+/* ---------- sections ---------- */
+.sec { padding-block: 26px 4px; display: flex; flex-direction: column; gap: 12px; }
+.sec h2 { font-size: 22px; }
+.sec .hint { margin: -4px 0 2px; color: var(--muted); font-size: 14px; }
+
+/* day rail: sun at the top, dusk at the bottom */
+.rail { position: relative; display: flex; flex-direction: column; gap: 0; padding-left: 22px; }
+.rail::before { content: ""; position: absolute; left: 8px; top: 18px; bottom: 18px; width: 4px; border-radius: 2px;
+  background: linear-gradient(180deg, var(--sun) 0%, var(--sun) 40%, var(--sea) 58%, var(--dusk) 75%, var(--dusk) 100%); }
+.part { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 14px 0 6px; }
+.ride { font-size: 13px; color: var(--muted); padding: 6px 0 6px 6px; display: flex; gap: 6px; align-items: center; }
+.item { position: relative; display: grid; grid-template-columns: 50px 56px 1fr; gap: 12px; align-items: center; text-decoration: none;
+  background: var(--surface); border-radius: 18px; padding: 10px 12px 10px 10px; border: 1px solid var(--line); min-height: 64px; cursor: pointer; }
+.item::before { content: ""; position: absolute; left: -20px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%;
+  background: var(--c); border: 3px solid var(--bg); }
+.item .t { font-family: var(--f-display); font-weight: 700; font-size: 15px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.item .t small { display: block; font-family: var(--f-body); font-weight: 600; font-size: 12px; color: var(--muted); margin-top: 3px; }
+.item .n { display: flex; flex-direction: column; min-width: 0; }
+.item .n b { font-size: 16px; line-height: 1.2; }
+.item .n span { font-size: 13px; color: var(--muted); }
+.item .num { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-display); font-weight: 700;
+  font-size: 14px; color: #fff; background: var(--c); }
+.item.done { opacity: .55; }
+.item.done .num { background: var(--muted); }
+.item.cur { border-color: var(--c); box-shadow: 0 0 0 2px var(--c); }
+.home-row { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.home-row .t small, .home-row .n span { color: inherit; opacity: .75; }
+
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px; text-decoration: none; display: flex;
+  flex-direction: column; gap: 6px; min-height: 108px; cursor: pointer; }
+.card b { font-size: 16px; }
+.card span { font-size: 13px; color: var(--muted); }
+.card .ic { width: 26px; height: 26px; color: var(--sea); }
+.card.wide { grid-column: 1 / -1; min-height: 0; flex-direction: row; align-items: center; gap: 12px; }
+.foot { padding-block: 28px 40px; color: var(--muted); font-size: 12px; }
+
+/* ---------- full-screen sheets ---------- */
+.sheet { position: fixed; inset: 0; z-index: 20; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding-top: env(safe-area-inset-top, 0px); }
+.sheet[hidden] { display: none !important; }
+.topbar { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+.topbar.float { position: absolute; left: 0; right: 0; top: env(safe-area-inset-top, 0px); }
+.round { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.92); color: #0B2B36;
+  border: 0; box-shadow: 0 2px 10px rgba(0,0,0,.2); text-decoration: none; cursor: pointer; }
+.step { margin-left: auto; background: rgba(11,43,54,.78); color: #fff; font-weight: 800; font-size: 13px; padding: 8px 12px; border-radius: 999px; }
+.hero { position: relative; height: min(56vh, 460px); background: var(--c); overflow: hidden; }
+.gal { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.gal::-webkit-scrollbar { display: none; }
+.slide { position: relative; flex: 0 0 100%; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; }
+.slide > img, .slide .mapbox, .slide .mapbox img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.slide > img { cursor: zoom-in; }
+.slide::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 55%, rgba(0,0,0,.72)); }
+.cap { position: absolute; left: 16px; right: 16px; bottom: 34px; z-index: 2; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.5); }
+.cap b { display: block; font-size: 17px; line-height: 1.25; }
+.cap small { display: block; font-size: 11px; opacity: .75; margin-top: 2px; }
+.dots { position: absolute; left: 0; right: 0; bottom: 30px; z-index: 3; display: flex; justify-content: center; gap: 6px; pointer-events: none; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.5); transition: all .2s; }
+.dots i.on { width: 20px; border-radius: 4px; background: #fff; }
+.count { position: absolute; right: 14px; bottom: 30px; z-index: 3; background: rgba(0,0,0,.55); color: #fff; font-size: 12px; font-weight: 800;
+  padding: 3px 9px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+.swipehint { position: absolute; right: 14px; top: 64px; z-index: 3; background: rgba(0,0,0,.55); color: #fff; font-size: 12px; font-weight: 700;
+  padding: 4px 10px; border-radius: 999px; display: flex; gap: 6px; align-items: center; }
+.timechip { display: inline-flex; align-items: baseline; gap: 10px; align-self: flex-start; background: var(--cs); color: var(--ink); border-radius: 14px; padding: 6px 12px; }
+.timechip b { font-family: var(--f-display); font-size: 20px; font-variant-numeric: tabular-nums; }
+.timechip span { font-size: 13px; font-weight: 700; color: var(--muted); }
+.lightbox { position: fixed; inset: 0; z-index: 60; background: #000; display: flex; flex-direction: column; }
+.lightbox .gal .slide > img { object-fit: contain; cursor: zoom-out; }
+.lightbox .slide::after { display: none; }
+.lightbox .cap { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+.lightbox .close { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px; z-index: 5; }
+.thumb { width: 56px; height: 56px; border-radius: 14px; overflow: hidden; position: relative; flex: none; background: var(--c); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb .num { position: absolute; left: -2px; bottom: -2px; width: 24px !important; height: 24px !important; font-size: 12px !important; border: 2px solid var(--surface); }
+.hero .time { display: none;
+  display: flex; align-items: baseline; gap: 10px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.hero .time b { font-family: var(--f-display); font-size: 22px; font-variant-numeric: tabular-nums; }
+.hero .time span { font-size: 13px; font-weight: 700; color: #4E6670; }
+.body { background: var(--bg); border-radius: 24px 24px 0 0; margin-top: -22px; position: relative; z-index: 2;
+  padding-block: 20px 140px; display: flex; flex-direction: column; gap: 14px; }
+.kind { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font-size: 12px; font-weight: 800; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--c); background: var(--cs); padding: 5px 10px; border-radius: 999px; }
+.body h1 { font-size: clamp(24px, 7vw, 30px); line-height: 1.1; }
+.body .vn { color: var(--muted); font-size: 14px; margin-top: -6px; }
+.what { margin: 0; font-size: 17px; }
+.list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.list li { display: flex; gap: 10px; align-items: flex-start; }
+.list li .ic { color: var(--sea); margin-top: 3px; }
+.box { background: var(--warn-bg); color: var(--warn-ink); border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.box h3, .h3 { font-family: var(--f-body); font-weight: 800; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; display: flex; gap: 8px; align-items: center; }
+.box li .ic { color: var(--warn-ink); }
+.prices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.prices div { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; }
+.prices span { font-size: 12px; color: var(--muted); font-weight: 700; }
+.prices b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.check { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1.5px dashed var(--line); border-radius: 16px;
+  padding: 12px 14px; font-weight: 800; cursor: pointer; min-height: 52px; }
+.check[aria-pressed="true"] { border-style: solid; border-color: var(--sea); background: var(--sea-soft); }
+.minimap { border-radius: 18px; overflow: hidden; border: 1px solid var(--line); }
+
+/* sticky bottom action bar */
+.dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(0,0,0,0), var(--bg) 26%); }
+.dock .in { max-width: 560px; margin: 0 auto; display: flex; gap: 8px; }
+.dock .prev { flex: none; width: 56px; }
+.dock .next { flex: 1; min-width: 0; justify-content: space-between; text-align: left; background: var(--ink); color: var(--bg); }
+.dock .next .tx { display: flex; flex-direction: column; min-width: 0; }
+.dock .next small { font-weight: 700; font-size: 12px; opacity: .75; }
+.dock .next b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* maps */
+.mapbox { position: relative; width: 100%; }
+.mapbox img { width: 100%; display: block; }
+.pin { position: absolute; transform: translate(-50%, -50%); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--f-display); font-weight: 700; font-size: 14px; color: #fff; background: var(--c); border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.35); text-decoration: none; cursor: pointer; }
+.pin.home { background: #0B2B36; font-size: 12px; }
+.tabs { display: flex; gap: 6px; background: var(--surface); border: 1px solid var(--line); padding: 4px; border-radius: 14px; }
+.tabs button { flex: 1; border: 0; background: transparent; padding: 10px 6px; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; min-height: 44px; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+.mapframe { border-radius: 20px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 18px; height: 5px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+.pagehead { display: flex; align-items: center; gap: 10px; padding-block: 10px 6px; }
+.pagehead h1 { font-size: 22px; }
+.tiles { display: flex; flex-direction: column; gap: 10px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+.tile p { margin: 0; color: var(--muted); font-size: 15px; }
+.tile b.h { font-size: 16px; display: flex; gap: 8px; align-items: center; }
+.kv { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 15px; }
+.kv:last-child { border-bottom: 0; }
+.kv b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.phr { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.phr:last-child { border-bottom: 0; }
+.phr span { color: var(--muted); font-size: 14px; grid-row: span 2; align-self: center; }
+.phr i { font-style: normal; color: var(--sun); font-weight: 700; font-size: 13px; }
+@media (prefers-reduced-motion: no-preference) {
+  .sheet.enter { animation: up .22s ease-out; }
+  @keyframes up { from { transform: translateY(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-nav" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><path d="M9 3v15M15 6v15"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-bike" viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></symbol>
+  <symbol id="i-rain" viewBox="0 0 24 24"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6M8 14v6M12 16v6"/></symbol>
+  <symbol id="i-money" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-temple" viewBox="0 0 24 24"><path d="M3 22h18M6 18v-7M10 18v-7M14 18v-7M18 18v-7"/><polygon points="12 2 20 7 4 7"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+</svg>
+
+<main id="app"></main>
+
+<script>
+const DATA = {"date": "2026-10-03", "start": "11:00", "finish": "21:00", "totalKm": 99, "eveningPending": false, "home": {"lat": 12.25894, "lng": 109.19743, "nav": "https://www.google.com/maps/dir/?api=1&destination=12.25894%2C109.19743&travelmode=two-wheeler", "name": "Muong Thanh, 04 Trần Phú"}, "stops": [{"id": 1, "part": "south", "t0": "11:35", "t1": "11:55", "kind": "Вид", "ru": "Перевал Ку Хин", "sub": "Серпантин над морем", "vn": "Đèo Cù Hin", "lat": 12.13767, "lng": 109.20808, "what": "Самая красивая дорога юга: 8 км серпантина по склону горы над морем. Справа — острова Хон Че и Хон Мун, впереди внизу — длинный белый пляж Бай Зай, где вы будете купаться. В полдень вода здесь самая бирюзовая.", "do": ["Едьте медленно — сама дорога и есть главное", "Остановитесь на широкой площадке у обочины и сделайте фото", "У тележек наверху можно взять холодный кокос"], "warn": ["Тормозите только на широких площадках: по дороге быстро едут машины в аэропорт", "Если ночью был сильный ливень, на асфальте бывают камни"], "price": [["Вход", "бесплатно"], ["Кокос", "20–30 тыс."]], "nav": "https://www.google.com/maps/dir/?api=1&destination=12.13767%2C109.20808&travelmode=two-wheeler", "search": "https://www.google.com/maps/search/?api=1&query=%C4%90%C3%A8o%20C%C3%B9%20Hin%20Nha%20Trang", "alt": null, "leg": {"km": 20.6, "min": 35}, "gallery": [{"src": "assets/g/cuhin/cu-hin-islands-view.jpg", "cap": "Вид с перевала на море и острова залива", "credit": "nguyenquoctuan, CC BY-SA 3.0"}, {"src": "assets/g/cuhin/cu-hin-bay-cruise.jpg", "cap": "Склоны над заливом, острова и круизный лайнер", "credit": "Dinh Ngoc Binh, CC BY-SA 3.0"}, {"src": "assets/g/cuhin/bai-dai-beach.jpg", "cap": "Пляж Бай Зай у подножия перевала Ку Хин", "credit": "Bolyvn (vi.wikipedia), Public Domain"}]}, {"id": 2, "part": "south", "t0": "12:05", "t1": "12:55", "kind": "Еда", "ru": "Обед у моря", "sub": "Рыбные кафе на песке Бай Зай", "vn": "Bãi Dài · quán hải sản", "lat": 12.1158, "lng": 109.1951, "what": "У знака «Bãi Dài Nha Trang» стоит ряд простых морских кафе прямо на песке. Едите с видом на море, здесь же туалеты и место переодеться перед купанием.", "do": ["Выбирайте кафе, где сидят вьетнамцы", "Попробуйте кальмара на гриле, креветки и рис с морепродуктами", "Перед заказом спросите цену за килограмм: «бао нье-у мот ки?»"], "warn": ["Взвешивают при вас — сфотографируйте весы", "Если в меню написано «thời giá» (рыночная цена), узнайте цифру до заказа"], "price": [["Обед на двоих", "400–700 тыс."], ["Парковка", "5–10 тыс."]], "alt": {"label": "Кафе «Phố Biển» с отзывами", "url": "https://www.google.com/maps/search/?api=1&query=Nh%C3%A0%20H%C3%A0ng%20Ph%E1%BB%91%20Bi%E1%BB%83n%20Nguy%E1%BB%85n%20T%E1%BA%A5t%20Th%C3%A0nh%20B%C3%A3i%20D%C3%A0i%20Cam%20L%C3%A2m"}, "nav": "https://www.google.com/maps/dir/?api=1&destination=12.1158%2C109.1951&travelmode=two-wheeler", "search": "https://www.google.com/maps/search/?api=1&query=B%C3%A3i%20D%C3%A0i%20Nha%20Trang%20Cam%20H%E1%BA%A3i%20%C4%90%C3%B4ng", "leg": {"km": 4.3, "min": 10}, "gallery": [{"src": "assets/g/lunch/lunch-1.jpg", "cap": "Котёл варёных крабов и лобстеров прямо на песке (Нячанг)", "credit": "jetsun, CC BY-SA 3.0"}, {"src": "assets/g/lunch/lunch-2.jpg", "cap": "Живые лобстеры на пляже — выбираешь сам (Нячанг)", "credit": "snowflakegirl, CC BY 2.0"}, {"src": "assets/g/lunch/lunch-3.jpg", "cap": "Живые моллюски в тазу — свежее некуда (Нячанг)", "credit": "Phương Huy, Public domain"}]}, {"id": 3, "part": "south", "t0": "13:05", "t1": "14:35", "kind": "Пляж", "ru": "Дикий пляж Бай Зай", "sub": "Чистое море и почти никого", "vn": "Bãi Dài (Long Beach)", "lat": 12.0994, "lng": 109.1927, "what": "Белый песок и прозрачная вода — намного чище городского пляжа. Точка на карте — тихий съезд к морю между отелями Riviera и Aquamarine. Чем дальше от кафе, тем пустыннее: можно найти участок, где на сотни метров никого.", "do": ["Полтора часа на море и отдых", "Купайтесь по очереди: один в воде, второй присматривает за вещами", "Крем SPF 50 и шляпа: тени почти нет, солнце очень сильное"], "warn": ["Спасателей нет. Если волны выше колена — не заплывайте далеко, в октябре бывают обратные течения", "Съезд закрыт? Вернитесь к кафе и пройдите 300–500 м на юг по песку", "Сильные волны или грязно — запасной вариант: спокойная бухта Нью Тьен (80 тыс., по пути назад)"], "price": [["Вход", "бесплатно"], ["Лежак с зонтом", "50–100 тыс."]], "alt": {"label": "Запасной пляж Нью Тьен", "url": "https://www.google.com/maps/search/?api=1&query=12.1742%2C109.2056"}, "nav": "https://www.google.com/maps/dir/?api=1&destination=12.0994%2C109.1927&travelmode=two-wheeler", "search": "https://www.google.com/maps/search/?api=1&query=12.0994%2C109.1927", "leg": {"km": 6.4, "min": 10}, "gallery": [{"src": "assets/g/baidai/baidai-1.jpg", "cap": "Рассвет над Бай Зай: пальмы, зонтики и пустой пляж", "credit": "L.K.Phung, CC BY-SA 4.0"}, {"src": "assets/g/baidai/baidai-2.jpg", "cap": "Широкий песчаный пляж под Камранью, бирюзовая вода и горы", "credit": "Vinnie Cartabiano, CC BY 2.0"}, {"src": "assets/g/baidai/baidai-3.jpg", "cap": "Бирюзовое море у курортов побережья Камрани", "credit": "GDAE, CC BY-SA 4.0"}, {"src": "assets/g/baidai/baidai-5.jpg", "cap": "Бай Зай: длинный пляж и прибой без толп", "credit": "Bolyvn at vi.wikipedia, Public domain"}, {"src": "assets/g/baidai/baidai-6.jpg", "cap": "Вид с самолёта: полоса Бай Зай у аэропорта Камрань", "credit": "Lê Đức Thọ, Public domain"}]}, {"id": 4, "part": "north", "t0": "15:25", "t1": "16:00", "kind": "Скалы", "ru": "Скалы Хон Чонг", "sub": "Каменный сад в море", "vn": "Hòn Chồng", "lat": 12.27196, "lng": 109.20598, "what": "Огромные гранитные валуны, сложенные друг на друга прямо в море, и «отпечаток руки великана». Внутри — кафе над скалами, где играют на вьетнамской цитре. Вид вдоль всей бухты до острова Хон Че.", "do": ["Пролезьте по скалам к самым крупным валунам — лучшие фото", "Найдите камень с «отпечатком ладони»", "Выпейте сок или кофе в кафе над морем (15–55 тыс.)"], "warn": ["Камни скользкие — в шлёпанцах осторожно", "С 15:00 до 17:00 возможен короткий ливень: пережидайте в кафе"], "price": [["Вход", "30 тыс./чел."], ["Парковка", "3–5 тыс."]], "nav": "https://www.google.com/maps/dir/?api=1&destination=12.27196%2C109.20598&travelmode=two-wheeler", "search": "https://www.google.com/maps/search/?api=1&query=H%C3%B2n%20Ch%E1%BB%93ng%20Nha%20Trang", "alt": null, "leg": {"km": 29.6, "min": 50}, "gallery": [{"src": "assets/g/honchong/hon-chong-panorama.jpg", "cap": "Гранитные валуны Хон Чонг на фоне бирюзового залива", "credit": "Can't stop shooting film from Nha Trang,, CC BY 2.0"}, {"src": "assets/g/honchong/hon-chong-rocks-sea.jpg", "cap": "Знаменитый «камень на камне» над прибоем", "credit": "stanislav baranov, CC BY-SA 2.0"}, {"src": "assets/g/honchong/hon-chong-from-above.jpg", "cap": "Скалы Хон Чонг сверху: прозрачная вода и горы", "credit": "Phương Huy, Public Domain"}, {"src": "assets/g/honchong/hon-chong-handprint.jpg", "cap": "«Отпечаток ладони великана» на огромном валуне", "credit": "Phương Huy, Public Domain"}, {"src": "assets/g/honchong/hon-chong-viewpoint.jpg", "cap": "Тихая смотровая площадка над морем и лодками", "credit": "Александр Попрыгин, CC BY 3.0"}, {"src": "assets/g/honchong/hon-chong-cove.jpg", "cap": "Фото у валунов в бухте с видом на город", "credit": "Phương Huy, Public Domain"}]}, {"id": 5, "part": "north", "t0": "16:15", "t1": "16:45", "kind": "Дорога", "ru": "Морская дорога Лыонг Шон", "sub": "Бухта Бай Тьен и перевал", "vn": "Đèo Lương Sơn · Bãi Tiên", "lat": 12.29877, "lng": 109.23678, "what": "Лучшая прибрежная дорога у города: скала с одной стороны, открытое море с другой. Внизу — бухта Бай Тьен из гладких валунов с горным ручьём. Выше на перевале — арка из бугенвиллии и уличные кафе «на отбойниках» с кокосами и жареным кальмаром.", "do": ["Остановитесь у бухты Бай Тьен (точка на карте) — фото на валунах", "Поднимитесь ещё 4 км до вершины перевала, найдите арку из цветов", "Кокос или сок сахарного тростника с видом на море"], "warn": ["Закат отсюда не увидеть: солнце уйдёт за гору около 16:50 — поэтому дальше едем на крышу", "Не останавливайтесь на поворотах, только на площадках"], "price": [["Вход", "бесплатно"], ["Кокос / снеки", "20–40 тыс."]], "alt": {"label": "Вершина перевала", "url": "https://www.google.com/maps/search/?api=1&query=12.31318%2C109.22804"}, "nav": "https://www.google.com/maps/dir/?api=1&destination=12.29877%2C109.23678&travelmode=two-wheeler", "search": "https://www.google.com/maps/search/?api=1&query=B%C3%A3i%20Ti%C3%AAn%20Nha%20Trang", "leg": {"km": 6.7, "min": 15}, "gallery": []}, {"id": 6, "part": "evening", "t0": "17:10", "t1": "18:10", "kind": "Закат", "ru": "Закат на крыше Skylight", "sub": "43-й этаж, обзор на 360°", "vn": "Skylight · 38 Trần Phú", "lat": 12.24334, "lng": 109.196, "what": "Открытая площадка на 43-м этаже над всем городом. Отсюда видно, как солнце уходит за горы (около 17:27), потом небо над морем становится розовым и зажигается набережная. Самый простой способ увидеть настоящий закат в Нячанге.", "do": ["Будьте наверху к 17:15 — солнце садится в 17:27", "Пройдите по кругу: горы на западе, море и острова на востоке", "Коктейль или сок входит в билет"], "warn": ["Шорты и сандалии можно. Купальники нельзя. Про майки правила молчат — обычно пускают", "Парковка — платная стоянка напротив InterContinental, 50 м"], "price": [["Вход с напитком", "150 тыс./чел. до 20:00"], ["Парковка", "5–10 тыс."]], "nav": "https://www.google.com/maps/dir/?api=1&destination=Skylight%20Nha%20Trang%2C%2038%20Tr%E1%BA%A7n%20Ph%C3%BA%2C%20Nha%20Trang&travelmode=two-wheeler", "search": "https://www.google.com/maps/search/?api=1&query=Skylight%20Nha%20Trang%2038%20Tr%E1%BA%A7n%20Ph%C3%BA", "alt": null, "leg": {"km": 15.9, "min": 25}, "gallery": [{"src": "assets/g/skylight/skylight-1.jpg", "cap": "Вид на город сверху: ночная набережная Чан Фу", "credit": "cloud.shepherd (Brian S Miner), CC BY 2.0"}, {"src": "assets/g/skylight/skylight-2.jpg", "cap": "Вид на город сверху: залив и огни в сумерках", "credit": "dennis, CC BY 2.0"}, {"src": "assets/g/skylight/skylight-3.jpg", "cap": "Вид на город сверху: закат над крышами и горами", "credit": "Makarenko Sasha, CC BY-SA 3.0"}, {"src": "assets/g/skylight/skylight-4.jpg", "cap": "Вид на город сверху: ночные огни набережной и моста", "credit": "Nguyen Dung Tien, CC BY-SA 2.0"}]}, {"id": 7, "part": "evening", "t0": "18:20", "t1": "19:15", "kind": "Ужин", "ru": "Ужин в Yen's Restaurant", "sub": "Вьетнамская кухня, средний чек", "vn": "73/6 Trần Quang Khải", "lat": 12.232641, "lng": 109.19543, "what": "Уютный вьетнамский ресторан в переулке у набережной: не дорогой и не «забегаловка». Гостей хвалят за приветливый персонал. В 1,5 км от крыши Skylight.", "do": ["Фо с говядиной, лапша с морепродуктами, жареные спринг-роллы", "Свежие шейки и соки", "Чек 150–300 тыс. на человека"], "warn": ["Вы за рулём: во Вьетнаме штраф за любое количество алкоголя — от 2 млн донгов", "Если очень людно — запасной вариант «Lạc Cảnh»: говядина на углях за столом, 150–250 тыс. (только наличные)"], "price": [["Ужин на двоих", "300–600 тыс."], ["Время", "~55 мин"]], "alt": {"label": "Запасной: «Lạc Cảnh»", "url": "https://www.google.com/maps/search/?api=1&query=L%E1%BA%A1c%20C%E1%BA%A3nh%2044%20Nguy%E1%BB%85n%20B%E1%BB%89nh%20Khi%C3%AAm%20Nha%20Trang"}, "nav": "https://www.google.com/maps/dir/?api=1&destination=Yen%27s%20Restaurant%2C%2073/6%20Tr%E1%BA%A7n%20Quang%20Kh%E1%BA%A3i%2C%20Nha%20Trang&travelmode=two-wheeler", "search": "https://www.google.com/maps/search/?api=1&query=Yen%27s%20Restaurant%20Tr%E1%BA%A7n%20Quang%20Kh%E1%BA%A3i%20Nha%20Trang", "leg": {"km": 1.6, "min": 10}, "gallery": [{"src": "assets/g/dinner/01-pho-bo.jpg", "cap": "Фо бо — типичное блюдо, как в меню Yen's", "credit": "Vinnie Cartabiano, CC BY 2.0"}, {"src": "assets/g/dinner/02-bo-nuong-la-lot.jpg", "cap": "Говядина на гриле в листьях лот — типичное блюдо", "credit": "Vinnie Cartabiano, CC BY 2.0"}, {"src": "assets/g/dinner/03-hu-tieu-hai-san.jpg", "cap": "Лапша с морепродуктами — типичное вьетнамское блюдо", "credit": "Tonbi ko, CC BY-SA 4.0"}, {"src": "assets/g/dinner/04-nem-nha-trang.jpg", "cap": "Жареные спринг-роллы нем в ресторане Нячанга", "credit": "@felixtriller, CC BY 2.0"}, {"src": "assets/g/dinner/05-sinh-to-bo.jpg", "cap": "Синь то — авокадовый шейк, типичный вьетнамский напиток", "credit": "Hoangkid, Public domain"}, {"src": "assets/g/dinner/06-evening-street-dinner.jpg", "cap": "Вечерний уличный ужин во Вьетнаме (Ханой)", "credit": "DesheBoard, CC BY 2.0"}]}, {"id": 8, "part": "evening", "t0": "19:35", "t1": "20:45", "kind": "Вечер", "ru": "Marina Beach Club", "sub": "Огни города через бухту, шоу с огнём", "vn": "Ana Marina · Nguyễn Cơ Thạch", "lat": 12.29297, "lng": 109.21553, "what": "Пляжный клуб у новой яхтенной марины на севере. Сидите у воды, а напротив, через бухту, светится вся набережная Нячанга. По вечерам здесь диджей, самба и огненное шоу, костёр и сапы с подсветкой. Вход свободный, и клуб по пути домой — от него 12 минут до дома.", "do": ["Займите столик у воды лицом к городу — лучший вид на огни", "Посмотрите огненное шоу и музыку (по данным Tuổi Trẻ, май 2026)", "Возьмите коктейль или сок — водителю безалкогольный"], "warn": ["Расписание в новостях и на сайте расходится. Перед выездом позвоните или напишите в Zalo: 0947 836 006", "Купаться не советуем: в отзывах 2025–2026 жалуются на мутную воду", "Если клуб закрыт или идёт ливень — запасной: тихий бар The Star Night на 40-м этаже (кнопка ниже)"], "price": [["Вход", "бесплатно"], ["Напитки на двоих", "≈ 200–500 тыс."]], "alt": {"label": "Запасной: бар The Star Night, 40 этаж", "url": "https://www.google.com/maps/search/?api=1&query=Regalia%20Gold%20Hotel%2039-41%20Nguy%E1%BB%85n%20Th%E1%BB%8B%20Minh%20Khai%20Nha%20Trang"}, "nav": "https://www.google.com/maps/dir/?api=1&destination=Marina%20Beach%20Club%20Nha%20Trang%2C%20Nguy%E1%BB%85n%20C%C6%A1%20Th%E1%BA%A1ch&travelmode=two-wheeler", "search": "https://www.google.com/maps/search/?api=1&query=Marina%20Beach%20Club%20Nha%20Trang%20Nguy%E1%BB%85n%20C%C6%A1%20Th%E1%BA%A1ch", "leg": {"km": 8.4, "min": 20}, "gallery": []}], "homeLeg": {"km": 5.8, "min": 12}, "maps": {"all": {"src": "assets/map_all.jpg", "w": 848, "h": 1400, "pins": [{"id": "home", "lat": 12.25894, "lng": 109.19743, "part": "home", "label": "Дом", "x": 38.19, "y": 27.65}, {"id": 1, "lat": 12.13767, "lng": 109.20808, "part": "south", "label": "Перевал Ку Хин", "x": 45.5, "y": 79.28}, {"id": 2, "lat": 12.1158, "lng": 109.1951, "part": "south", "label": "Обед у моря", "x": 36.59, "y": 88.58}, {"id": 3, "lat": 12.0994, "lng": 109.1927, "part": "south", "label": "Дикий пляж Бай Зай", "x": 34.94, "y": 95.56}, {"id": 4, "lat": 12.27196, "lng": 109.20598, "part": "north", "label": "Скалы Хон Чонг", "x": 44.06, "y": 22.11}, {"id": 5, "lat": 12.29877, "lng": 109.23678, "part": "north", "label": "Морская дорога Лыонг Шон", "x": 65.22, "y": 10.69}, {"id": 6, "lat": 12.24334, "lng": 109.196, "part": "evening", "label": "Закат на крыше Skylight", "x": 37.21, "y": 34.29}, {"id": 7, "lat": 12.232641, "lng": 109.19543, "part": "evening", "label": "Ужин в Yen's Restaurant", "x": 36.81, "y": 38.85}, {"id": 8, "lat": 12.29297, "lng": 109.21553, "part": "evening", "label": "Marina Beach Club", "x": 50.62, "y": 13.16}]}, "south": {"src": "assets/map_south.jpg", "w": 570, "h": 728, "pins": [{"id": 1, "lat": 12.13767, "lng": 109.20808, "part": "south", "label": "Перевал Ку Хин", "x": 65.78, "y": 18.79}, {"id": 2, "lat": 12.1158, "lng": 109.1951, "part": "south", "label": "Обед у моря", "x": 39.25, "y": 54.59}, {"id": 3, "lat": 12.0994, "lng": 109.1927, "part": "south", "label": "Дикий пляж Бай Зай", "x": 34.35, "y": 81.44}]}, "city": {"src": "assets/map_city.jpg", "w": 650, "h": 1074, "pins": [{"id": "home", "lat": 12.25894, "lng": 109.19743, "part": "home", "label": "Дом", "x": 16.65, "y": 65.58}, {"id": 4, "lat": 12.27196, "lng": 109.20598, "part": "north", "label": "Скалы Хон Чонг", "x": 31.97, "y": 51.13}, {"id": 5, "lat": 12.29877, "lng": 109.23678, "part": "north", "label": "Морская дорога Лыонг Шон", "x": 87.18, "y": 21.37}, {"id": 6, "lat": 12.24334, "lng": 109.196, "part": "evening", "label": "Закат на крыше Skylight", "x": 14.09, "y": 82.9}, {"id": 7, "lat": 12.232641, "lng": 109.19543, "part": "evening", "label": "Ужин в Yen's Restaurant", "x": 13.06, "y": 94.78}, {"id": 8, "lat": 12.29297, "lng": 109.21553, "part": "evening", "label": "Marina Beach Club", "x": 49.09, "y": 27.8}]}, "s1": {"src": "assets/mini_1.jpg", "w": 820, "h": 524, "pins": [{"id": 1, "lat": 12.13767, "lng": 109.20808, "part": "south", "label": "Перевал Ку Хин", "x": 50.01, "y": 50.04}]}, "s2": {"src": "assets/mini_2.jpg", "w": 820, "h": 524, "pins": [{"id": 2, "lat": 12.1158, "lng": 109.1951, "part": "south", "label": "Обед у моря", "x": 50.01, "y": 50.03}]}, "s3": {"src": "assets/mini_3.jpg", "w": 820, "h": 524, "pins": [{"id": 3, "lat": 12.0994, "lng": 109.1927, "part": "south", "label": "Дикий пляж Бай Зай", "x": 50.01, "y": 50.03}]}, "s4": {"src": "assets/mini_4.jpg", "w": 820, "h": 524, "pins": [{"id": 4, "lat": 12.27196, "lng": 109.20598, "part": "north", "label": "Скалы Хон Чонг", "x": 50.01, "y": 50.06}]}, "s5": {"src": "assets/mini_5.jpg", "w": 820, "h": 524, "pins": [{"id": 5, "lat": 12.29877, "lng": 109.23678, "part": "north", "label": "Морская дорога Лыонг Шон", "x": 50.01, "y": 50.07}]}, "s6": {"src": "assets/mini_6.jpg", "w": 820, "h": 524, "pins": [{"id": 6, "lat": 12.24334, "lng": 109.196, "part": "evening", "label": "Закат на крыше Skylight", "x": 50.01, "y": 50.06}]}, "s7": {"src": "assets/mini_7.jpg", "w": 820, "h": 524, "pins": [{"id": 7, "lat": 12.232641, "lng": 109.19543, "part": "evening", "label": "Ужин в Yen's Restaurant", "x": 50.01, "y": 50.05}]}, "s8": {"src": "assets/mini_8.jpg", "w": 820, "h": 524, "pins": [{"id": 8, "lat": 12.29297, "lng": 109.21553, "part": "evening", "label": "Marina Beach Club", "x": 50.01, "y": 50.06}]}}, "credits": ["авторы и лицензии подписаны на каждом фото (Wikimedia Commons, Flickr, лицензии CC)"]};
+const PART = { south: ["var(--sun)", "var(--sun-soft)"], north: ["var(--sea)", "var(--sea-soft)"], evening: ["var(--dusk)", "var(--dusk-soft)"], home: ["#0B2B36", "var(--line)"] };
+const PART_NAME = { south: "Юг · море и пляж", north: "Север · скалы и морская дорога", evening: "Вечер · закат, ужин, остров" };
+const ic = (n, cls = "") => `<svg class="ic ${cls}"><use href="#i-${n}"/></svg>`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const fmtDur = m => m >= 60 ? `${Math.floor(m / 60)} ч${m % 60 ? " " + (m % 60) + " мин" : ""}` : `${m} мин`;
+const S = DATA.stops;
+
+let done = {};
+try { done = JSON.parse(localStorage.getItem("nt-done") || "{}"); } catch (e) { done = {}; }
+const saveDone = () => { try { localStorage.setItem("nt-done", JSON.stringify(done)); } catch (e) {} };
+
+function vnNow() {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
+  const g = t => parts.find(p => p.type === t).value;
+  return { date: `${g("year")}-${g("month")}-${g("day")}`, min: Number(g("hour")) * 60 + Number(g("minute")) };
+}
+
+function nowState() {
+  const n = vnNow();
+  if (n.date < DATA.date) return { kind: "before-day" };
+  if (n.date > DATA.date) return { kind: "after" };
+  const m = n.min;
+  if (m < toMin(DATA.start)) return { kind: "before", left: toMin(DATA.start) - m };
+  for (let i = 0; i < S.length; i++) {
+    const s = S[i], a = toMin(s.t0), b = toMin(s.t1);
+    if (m < a) return { kind: "ride", to: s, eta: s.t0, i };
+    if (m <= b) return { kind: "at", s, left: b - m, pct: Math.round(100 * (m - a) / Math.max(1, b - a)), i };
+  }
+  if (m < toMin(DATA.finish)) return { kind: "home-ride" };
+  return { kind: "after" };
+}
+
+function nowCard() {
+  const st = nowState();
+  const first = S[0];
+  let lbl = "Сейчас по плану", h = "", p = "", act = "", bar = "";
+  if (st.kind === "before-day") {
+    lbl = "Маршрут на субботу, 3 октября";
+    h = "Старт в 11:00 от дома";
+    p = `Первая точка — ${esc(first.ru)}, ${first.leg.km} км (~${first.leg.min} мин). Возьмите купальники, крем и наличные.`;
+    act = `<a class="btn go" href="${first.nav}" target="_blank" rel="noopener">${ic("nav")}Навигатор к первой точке</a>`;
+  } else if (st.kind === "before") {
+    h = `До старта ${fmtDur(st.left)}`;
+    p = `В 11:00 выезжаем на юг, к точке «${esc(first.ru)}».`;
+    act = `<a class="btn go" href="${first.nav}" target="_blank" rel="noopener">${ic("nav")}Навигатор к первой точке</a>`;
+  } else if (st.kind === "ride") {
+    lbl = "Сейчас — в дороге";
+    h = `Едем к ${st.to.id}. ${esc(st.to.ru)}`;
+    p = `Прибытие по плану в ${st.to.t0}. ${st.to.leg.km} км, ~${st.to.leg.min} мин.`;
+    act = `<div class="row"><a class="btn go" href="${st.to.nav}" target="_blank" rel="noopener">${ic("nav")}Навигатор</a><a class="btn soft" href="#s${st.to.id}">Открыть точку</a></div>`;
+  } else if (st.kind === "at") {
+    h = `${st.s.id}. ${esc(st.s.ru)}`;
+    p = `По плану здесь до ${st.s.t1} — ещё ${fmtDur(st.left)}.`;
+    bar = `<div class="bar"><b style="width:${st.pct}%"></b></div>`;
+    const nx = S[st.i + 1];
+    act = `<div class="row"><a class="btn soft" href="#s${st.s.id}">Открыть точку</a>${nx ? `<a class="btn go" href="${nx.nav}" target="_blank" rel="noopener">${ic("nav")}Дальше: ${nx.id}</a>` : ""}</div>`;
+  } else if (st.kind === "home-ride") {
+    lbl = "Сейчас — домой"; h = "Едем домой"; p = `${DATA.homeLeg.km} км, ~${DATA.homeLeg.min} мин.`;
+    act = `<a class="btn go" href="${DATA.home.nav}" target="_blank" rel="noopener">${ic("home")}Навигатор домой</a>`;
+  } else {
+    lbl = "День завершён"; h = "Вы прошли весь маршрут"; p = "Отдыхайте. Гид можно открыть снова в любой момент.";
+  }
+  return `<section class="now" aria-live="polite"><div class="lbl"><i></i>${lbl}</div><h2>${h}</h2><p>${p}</p>${bar}${act}</section>`;
+}
+
+function homeView() {
+  const st = nowState();
+  const curId = st.kind === "at" ? st.s.id : st.kind === "ride" ? st.to.id : null;
+  let rail = `<a class="item home-row" href="${DATA.home.nav}" target="_blank" rel="noopener" style="--c:#0B2B36">
+      <span class="t">${DATA.start}</span><span class="thumb" style="display:grid;place-items:center;color:var(--bg)">${ic("home")}</span><span class="n"><b>Старт от дома</b><span>${esc(DATA.home.name)}</span></span></a>`;
+  let lastPart = "";
+  for (const s of S) {
+    if (s.part !== lastPart) { rail += `<div class="part">${PART_NAME[s.part]}</div>`; lastPart = s.part; }
+    else rail += "";
+    rail += `<div class="ride">${ic("bike")} ${s.leg.km} км · ~${s.leg.min} мин</div>`;
+    const [c] = PART[s.part];
+    rail += `<a class="item${done[s.id] ? " done" : ""}${curId === s.id ? " cur" : ""}" href="#s${s.id}" style="--c:${c}">
+      <span class="t">${s.t0}<small>до ${s.t1}</small></span>
+      <span class="thumb"><img src="${s.gallery.length ? s.gallery[0].src : DATA.maps["s" + s.id].src}" alt="" loading="lazy"><span class="num">${done[s.id] ? ic("check") : s.id}</span></span>
+      <span class="n"><b>${esc(s.ru)}</b><span>${esc(s.sub)} · ${fmtDur(toMin(s.t1) - toMin(s.t0))}</span></span></a>`;
+  }
+  if (DATA.eveningPending) rail += `<div class="part">Вечер · 19:30–21:00</div><div class="item" style="--c:var(--dusk);cursor:default">
+      <span class="t">19:30<small>до 21:00</small></span><span class="thumb" style="display:grid;place-items:center;color:#fff">${ic("clock")}</span>
+      <span class="n"><b>Подбираю вечер с видом на город</b><span>Канатку убрал. Новый вариант появится здесь — ссылка та же</span></span></div>`;
+  rail += `<div class="ride">${ic("bike")} ${DATA.homeLeg.km} км · ~${DATA.homeLeg.min} мин</div>
+    <a class="item home-row" href="${DATA.home.nav}" target="_blank" rel="noopener" style="--c:#0B2B36">
+      <span class="t">${DATA.finish}</span><span class="thumb" style="display:grid;place-items:center;color:var(--bg)">${ic("home")}</span><span class="n"><b>Дома, отдыхаем</b><span>Навигатор домой</span></span></a>`;
+  return `
+  <header class="cover"><img src="assets/cover.jpg" alt="Скалы и бирюзовое море у Нячанга">
+    <div class="wrap in">
+      <span class="eyebrow">${ic("bike")}Суббота · 3 октября</span>
+      <h1>Нячанг за один день на скутере</h1>
+      <p>Перевал над морем, дикий пляж, каменный сад Хон Чонг, морская дорога, закат на 43-м этаже, ужин и огни города с пляжного клуба.</p>
+      <div class="stats"><div><b>11:00</b><span>старт</span></div><div><b>${DATA.finish}</b><span>дома</span></div><div><b>${DATA.totalKm} км</b><span>за день</span></div><div><b>${S.length}</b><span>точек</span></div></div>
+    </div></header>
+  <div class="wrap">
+    ${nowCard()}
+    <section class="sec"><h2>Маршрут</h2><p class="hint">Нажмите на точку — откроется экран с навигатором. Всё без дресс-кода: шорты и майки — ок.</p>
+      <div class="rail">${rail}</div></section>
+    <section class="sec"><h2>Ещё</h2>
+      <div class="cards">
+        <a class="card" href="#map">${ic("map")}<b>Карта дня</b><span>Все точки, нажимаются</span></a>
+        <a class="card" href="#tips">${ic("bag")}<b>Перед выездом</b><span>Что взять, права, бюджет</span></a>
+        <a class="card" href="#planb">${ic("rain")}<b>План Б</b><span>Дождь, волны, опоздание</span></a>
+        <a class="card" href="#phrases">${ic("chat")}<b>6 фраз</b><span>Цена, счёт, «не остро»</span></a>
+        <a class="card wide" href="#temples">${ic("temple")}<span><b>День храмов — в другой раз</b><br><span>Пагоды и собор, куда нужна закрытая одежда, вынесены в отдельный гид</span></span></a>
+      </div></section>
+    <p class="foot">Фото: ${DATA.credits.join(" · ")}. Карты: Esri World Street Map, © OpenStreetMap contributors. Время в пути рассчитано по дорогам с запасом на скутер.</p>
+  </div>`;
+}
+
+function mapHTML(m, small) {
+  const pins = m.pins.map(p => {
+    const [c] = PART[p.part];
+    const href = p.id === "home" ? DATA.home.nav : (small ? S.find(s => s.id === p.id).nav : `#s${p.id}`);
+    const ext = p.id === "home" || small ? ` target="_blank" rel="noopener"` : "";
+    return `<a class="pin${p.id === "home" ? " home" : ""}" href="${href}"${ext} style="left:${p.x}%;top:${p.y}%;--c:${c}" aria-label="${esc(p.label)}">${p.id === "home" ? "Д" : p.id}</a>`;
+  }).join("");
+  return `<div class="mapbox" style="aspect-ratio:${m.w}/${m.h}"><img src="${m.src}" alt="Карта" loading="lazy">${pins}</div>`;
+}
+
+function stopView(id) {
+  const i = S.findIndex(s => s.id === id), s = S[i];
+  const [c, cs] = PART[s.part];
+  const prev = S[i - 1], next = S[i + 1];
+  const slides = s.gallery.map((g, k) => `<div class="slide"><img src="${g.src}" alt="${esc(g.cap)}" data-zoom="${s.id}:${k}" ${k ? 'loading="lazy"' : ""}>
+      <div class="cap"><b>${esc(g.cap)}</b><small>Фото: ${esc(g.credit)}</small></div></div>`).join("")
+    + `<div class="slide">${mapHTML(DATA.maps["s" + s.id], true)}<div class="cap"><b>Где это: нажмите на номер — откроется навигатор</b></div></div>`;
+  const n = s.gallery.length + 1;
+  const hero = `<div class="gal" data-gal="${n}">${slides}</div><div class="dots">${Array.from({ length: n }, (_, k) => `<i class="${k ? "" : "on"}"></i>`).join("")}</div>
+    ${n > 1 ? `<span class="swipehint">${ic("left")}листайте фото${ic("right")}</span>` : ""}`;
+  const li = (arr, icon) => arr.map(x => `<li>${ic(icon)}<span>${esc(x)}</span></li>`).join("");
+  const nextHTML = next
+    ? `<a class="btn next" href="#s${next.id}"><span class="tx"><small>Дальше · ${next.leg.km} км · ~${next.leg.min} мин</small><b>${next.id}. ${esc(next.ru)}</b></span>${ic("right")}</a>`
+    : `<a class="btn next" href="${DATA.home.nav}" target="_blank" rel="noopener"><span class="tx"><small>Финиш · ${DATA.homeLeg.km} км · ~${DATA.homeLeg.min} мин</small><b>Навигатор домой</b></span>${ic("home")}</a>`;
+  return `
+  <div class="topbar float"><a class="round" href="#" aria-label="К маршруту">${ic("list")}</a><span class="step">Точка ${s.id} из ${S.length}</span><a class="round" href="#map" aria-label="Карта">${ic("map")}</a></div>
+  <div class="hero" style="--c:${c}">${hero}<div class="time"><b>${s.t0}–${s.t1}</b><span>${fmtDur(toMin(s.t1) - toMin(s.t0))}</span></div></div>
+  <div class="body wrap" style="--c:${c};--cs:${cs}">
+    <span class="kind">${esc(s.kind)}</span>
+    <h1>${esc(s.ru)}</h1>
+    <div class="vn">${esc(s.vn)}</div>
+    <div class="timechip"><b>${s.t0}–${s.t1}</b><span>${fmtDur(toMin(s.t1) - toMin(s.t0))} по плану</span></div>
+    <div class="row"><a class="btn go" href="${s.nav}" target="_blank" rel="noopener">${ic("nav")}Навигатор сюда</a>
+      <a class="btn line pinbtn" href="${s.search}" target="_blank" rel="noopener">${ic("pin")}На карте</a></div>
+    <p class="what">${esc(s.what)}</p>
+    <div><div class="h3" style="color:var(--sea);margin-bottom:8px">${ic("check")}Что делать</div><ul class="list">${li(s.do, "check")}</ul></div>
+    <div class="box"><h3>${ic("alert")}Важно</h3><ul class="list">${li(s.warn, "alert")}</ul></div>
+    <div class="prices">${s.price.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("")}</div>
+    ${s.alt ? `<a class="btn line" href="${s.alt.url}" target="_blank" rel="noopener">${ic("search")}${esc(s.alt.label)}</a>` : ""}
+    <button class="check" id="done-${s.id}" aria-pressed="${!!done[s.id]}" data-done="${s.id}">${ic("check")}${done[s.id] ? "Были здесь" : "Отметить: были здесь"}</button>
+  </div>
+  <nav class="dock"><div class="in">
+    <a class="btn line prev" href="${prev ? "#s" + prev.id : "#"}" aria-label="${prev ? "Предыдущая точка" : "К маршруту"}">${ic("left")}</a>${nextHTML}
+  </div></nav>`;
+}
+
+function pageHead(title) {
+  return `<div class="topbar"><a class="round" href="#" aria-label="Назад к маршруту">${ic("left")}</a><h1 style="font-size:20px">${title}</h1></div>`;
+}
+
+function mapView(tab) {
+  const t = tab || "all";
+  const tabs = [["all", "Весь день"], ["south", "Юг"], ["city", "Город и север"]];
+  return `${pageHead("Карта дня")}<div class="wrap" style="display:flex;flex-direction:column;gap:12px;padding-bottom:40px">
+    <div class="tabs" role="tablist">${tabs.map(([k, n]) => `<button role="tab" id="tab-${k}" aria-selected="${k === t}" data-tab="${k}">${n}</button>`).join("")}</div>
+    <div class="mapframe">${mapHTML(DATA.maps[t], false)}</div>
+    <div class="legend"><span><i style="background:var(--sun)"></i>День: юг и север</span><span><i style="background:var(--dusk)"></i>Вечер</span></div>
+    <p class="hint" style="color:var(--muted);margin:0">Нажмите на номер — откроется экран точки с кнопкой навигатора.</p></div>`;
+}
+
+const TIPS = `
+  <div class="tile"><b class="h">${ic("bag")}Взять с собой</b><p>Купальники, полотенце, крем SPF 50, шляпы, воду, дождевик (с 15 до 17 возможен короткий дождь), пакет для телефонов, наличные мелкими.</p></div>
+  <div class="tile"><b class="h">${ic("bike")}Скутер</b><p>Залейте полный бак до выезда на юг — за день почти 100 км. Шлемы на обоих (штраф 400–600 тыс.). Права: национальные + международные с категорией A, иначе штраф 2–4 млн. Алкоголь за рулём нельзя совсем.</p></div>
+  <div class="tile"><b class="h">${ic("clock")}Погода и солнце</b><p>+25…30 °C, днём очень сильное солнце (УФ до 12). Закат 17:32, темно к 17:55 — назад по городу едем уже с фарами.</p></div>
+  <div class="tile"><b class="h">${ic("money")}Бюджет на двоих</b>
+    <div class="kv"><span>Бензин и парковки</span><b>130–160 тыс.</b></div>
+    <div class="kv"><span>Обед у моря</span><b>400–700 тыс.</b></div>
+    <div class="kv"><span>Хон Чонг (вход)</span><b>60 тыс.</b></div>
+    <div class="kv"><span>Кокосы, соки, снеки</span><b>100–150 тыс.</b></div>
+    <div class="kv"><span>Skylight с напитками</span><b>300 тыс.</b></div>
+    <div class="kv"><span>Ужин</span><b>300–600 тыс.</b></div>
+    <div class="kv"><span>Напитки в Marina Beach Club</span><b>200–500 тыс.</b></div>
+    <div class="kv"><span><b>Итого</b></span><b>≈ 1,5–2,4 млн</b></div></div>`;
+
+const PLANB = `
+  <div class="tile"><b class="h">${ic("rain")}Сильный дождь</b><p>Переждите 30–60 минут в ближайшем кафе — ливни в октябре короткие. Если льёт долго: Океанографический музей (акулы, черепахи, скелет кита; 40 тыс., до 18:00) — в южном конце набережной.</p></div>
+  <div class="tile"><b class="h">${ic("alert")}На Бай Зай волны или мусор</b><p>Спокойная бухта Нью Тьен — 80 тыс., лежаки и душ, по пути обратно в город.</p><a class="btn line" href="https://www.google.com/maps/search/?api=1&query=12.1742%2C109.2056" target="_blank" rel="noopener">${ic("pin")}Нью Тьен на карте</a></div>
+  <div class="tile"><b class="h">${ic("clock")}Опаздываете</b><p>Сократите пляж или пропустите морскую дорогу (точка 5). Главное — быть на крыше Skylight к 17:15, к закату.</p></div>
+  <div class="tile"><b class="h">${ic("bike")}Хочется активнее</b><p>Вместо крыши — подъём на гору Ко Тьен (первая вершина, 30–45 мин вверх по открытой тропе). Лучший закат в городе, но спуск в сумерках с фонариками и только по сухой тропе.</p><a class="btn line" href="https://www.google.com/maps/search/?api=1&query=12.29198%2C109.19567" target="_blank" rel="noopener">${ic("pin")}Начало тропы</a></div>
+  <div class="tile"><b class="h">${ic("map")}Есть лишний час</b><p>Скалы и пещеры Ханг Хео с кофейней над заливом Нья Фу — 16 км на север по той же морской дороге. Обувь не скользкую.</p><a class="btn line" href="https://www.google.com/maps/search/?api=1&query=12.32943%2C109.21019" target="_blank" rel="noopener">${ic("pin")}Ханг Хео на карте</a></div>
+  <div class="tile"><b class="h">${ic("clock")}Не хочется домой в 21:00</b><p>По субботам после 21:00 — вечеринка на пляже Sailing Club (вход 150–250 тыс. с напитком).</p></div>`;
+
+const PHRASES = [["Сколько стоит?", "Bao nhiêu tiền?", "бао нье-у тьен"], ["Сколько за 1 кг?", "Bao nhiêu 1 ký?", "бао нье-у мот ки"],
+  ["Счёт, пожалуйста", "Tính tiền", "тинь тьен"], ["Не острое", "Không cay", "хонг кай"], ["Спасибо", "Cảm ơn", "кам он"], ["Парковка", "Gửi xe", "гуй се"]];
+
+const TEMPLES = `
+  <div class="tile"><p>Эти места красивые, но туда пускают только с закрытыми плечами и коленями. Соберу по ним отдельный маршрут на день, когда будете готовы так одеться.</p></div>
+  <div class="tile"><b class="h">${ic("temple")}В отдельный гид</b>
+    <div class="kv"><span>Пагода Лонг Шон и Белый Будда</span><b>днём</b></div>
+    <div class="kv"><span>Башни По Нагар</span><b>до ~17:30</b></div>
+    <div class="kv"><span>Каменный собор</span><b>14:00–16:30</b></div>
+    <div class="kv"><span>Пагода на островке Хон До</span><b>до 16:30</b></div>
+    <div class="kv"><span>Виллы Бао Дая</span><b>только будни</b></div></div>`;
+
+function textView(title, html) {
+  return `${pageHead(title)}<div class="wrap tiles" style="padding-bottom:40px">${html}</div>`;
+}
+
+const app = document.getElementById("app");
+let sheet = null;
+
+function closeSheet() { if (sheet) { sheet.remove(); sheet = null; document.body.style.overflow = ""; } }
+function openSheet(html) {
+  closeSheet();
+  sheet = document.createElement("div");
+  sheet.className = "sheet enter";
+  sheet.innerHTML = html;
+  document.body.appendChild(sheet);
+  document.body.style.overflow = "hidden";
+  sheet.scrollTop = 0;
+}
+
+let mapTab = "all";
+function route() {
+  const h = location.hash.replace("#", "");
+  const m = h.match(/^s(\d+)$/);
+  if (m && S.some(s => s.id === Number(m[1]))) openSheet(stopView(Number(m[1])));
+  else if (h === "map") openSheet(mapView(mapTab));
+  else if (h === "tips") openSheet(textView("Перед выездом", TIPS));
+  else if (h === "planb") openSheet(textView("План Б", PLANB));
+  else if (h === "phrases") openSheet(textView("6 полезных фраз", `<div class="tile">${PHRASES.map(([a, b, c]) => `<div class="phr"><span>${a}</span><b>${b}</b><i>${c}</i></div>`).join("")}</div>`));
+  else if (h === "temples") openSheet(textView("День храмов", TEMPLES));
+  else { closeSheet(); app.innerHTML = homeView(); }
+}
+
+document.addEventListener("click", e => {
+  const d = e.target.closest("[data-done]");
+  if (d) { const id = d.dataset.done; done[id] = !done[id]; saveDone(); d.setAttribute("aria-pressed", !!done[id]);
+    d.innerHTML = `${ic("check")}${done[id] ? "Были здесь" : "Отметить: были здесь"}`; app.innerHTML = homeView(); return; }
+  const t = e.target.closest("[data-tab]");
+  if (t) { mapTab = t.dataset.tab; openSheet(mapView(mapTab)); }
+});
+
+// gallery dots follow the scroll position
+document.addEventListener("scroll", e => {
+  const g = e.target;
+  if (!(g instanceof Element) || !g.classList.contains("gal")) return;
+  const k = Math.round(g.scrollLeft / g.clientWidth);
+  const dots = g.parentElement.querySelectorAll(".dots i");
+  dots.forEach((d, j) => d.classList.toggle("on", j === k));
+  const hint = g.parentElement.querySelector(".swipehint"); if (hint && k > 0) hint.remove();
+}, true);
+
+// full-screen photo viewer
+document.addEventListener("click", e => {
+  const z = e.target.closest("[data-zoom]");
+  if (z && !z.closest(".lightbox")) {
+    const [id, k] = z.dataset.zoom.split(":").map(Number);
+    const s = S.find(x => x.id === id);
+    const lb = document.createElement("div");
+    lb.className = "lightbox";
+    lb.innerHTML = `<button class="round close" aria-label="Закрыть">${ic("x")}</button><div class="gal">${s.gallery.map(g =>
+      `<div class="slide"><img src="${g.src}" alt="${esc(g.cap)}" data-close="1"><div class="cap"><b>${esc(g.cap)}</b><small>Фото: ${esc(g.credit)}</small></div></div>`).join("")}</div>`;
+    document.body.appendChild(lb);
+    const gal = lb.querySelector(".gal"); gal.scrollLeft = k * gal.clientWidth;
+    return;
+  }
+  if (e.target.closest(".lightbox .close") || e.target.closest(".lightbox [data-close]")) e.target.closest(".lightbox").remove();
+});
+
+// swipe left/right between stops (not when swiping photos)
+let sx = null, sy = null;
+document.addEventListener("touchstart", e => { if (!sheet || e.target.closest(".gal, .lightbox")) { sx = null; return; } sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+document.addEventListener("touchend", e => {
+  if (sx === null) return;
+  const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy; sx = null;
+  const m = location.hash.match(/^#s(\d+)$/);
+  if (!m || Math.abs(dx) < 70 || Math.abs(dy) > 50) return;
+  const i = S.findIndex(s => s.id === Number(m[1]));
+  const to = dx < 0 ? S[i + 1] : S[i - 1];
+  location.hash = to ? "s" + to.id : "";
+}, { passive: true });
+
+window.addEventListener("hashchange", route);
+route();
+setInterval(() => { if (!sheet) app.innerHTML = homeView(); }, 60000);
+</script>
+</body></html>
